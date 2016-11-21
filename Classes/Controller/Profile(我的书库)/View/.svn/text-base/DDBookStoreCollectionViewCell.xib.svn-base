@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="16A323" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="gTV-IL-0wX" customClass="DDBookStoreCollectionViewCell" customModule="CHReadingBook" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="197" height="299"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="197" height="299"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cWv-FV-yaC">
+                        <rect key="frame" x="0.0" y="0.0" width="197" height="299"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="aJa-LS-sKF">
+                                <rect key="frame" x="0.0" y="0.0" width="197" height="299"/>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="aXj-oO-rgf">
+                                <rect key="frame" x="13" y="8" width="176" height="246"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="好书，精品推荐" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Dg0-wp-pNj">
+                                <rect key="frame" x="18" y="262" width="165" height="29"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="29" id="9Nq-v6-jAp"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstItem="Dg0-wp-pNj" firstAttribute="top" secondItem="aXj-oO-rgf" secondAttribute="bottom" constant="8" id="0fY-3g-u5W"/>
+                            <constraint firstAttribute="bottom" secondItem="Dg0-wp-pNj" secondAttribute="bottom" constant="8" id="Etq-Dw-CL7"/>
+                            <constraint firstAttribute="trailing" secondItem="Dg0-wp-pNj" secondAttribute="trailing" constant="14" id="Gg1-Da-41m"/>
+                            <constraint firstItem="aJa-LS-sKF" firstAttribute="leading" secondItem="cWv-FV-yaC" secondAttribute="leading" id="OR6-Dc-aI1"/>
+                            <constraint firstItem="Dg0-wp-pNj" firstAttribute="top" secondItem="aXj-oO-rgf" secondAttribute="bottom" constant="8" id="SE3-Hn-HvA"/>
+                            <constraint firstItem="aXj-oO-rgf" firstAttribute="leading" secondItem="cWv-FV-yaC" secondAttribute="leading" constant="13" id="X7f-xj-IZS"/>
+                            <constraint firstItem="aXj-oO-rgf" firstAttribute="top" secondItem="cWv-FV-yaC" secondAttribute="top" constant="8" id="XHU-cb-Luk"/>
+                            <constraint firstItem="Dg0-wp-pNj" firstAttribute="leading" secondItem="cWv-FV-yaC" secondAttribute="leading" constant="18" id="a6L-gR-YPt"/>
+                            <constraint firstAttribute="trailing" secondItem="aJa-LS-sKF" secondAttribute="trailing" id="br6-6L-yez"/>
+                            <constraint firstAttribute="bottom" secondItem="aJa-LS-sKF" secondAttribute="bottom" id="n0f-m0-CTM"/>
+                            <constraint firstItem="aJa-LS-sKF" firstAttribute="top" secondItem="cWv-FV-yaC" secondAttribute="top" id="uu7-nr-Wi0"/>
+                            <constraint firstAttribute="trailing" secondItem="aXj-oO-rgf" secondAttribute="trailing" constant="8" id="wCp-QW-FLJ"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            </view>
+            <constraints>
+                <constraint firstItem="cWv-FV-yaC" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="Xpg-wL-JaX"/>
+                <constraint firstItem="cWv-FV-yaC" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="ezo-hI-BaS"/>
+                <constraint firstAttribute="trailing" secondItem="cWv-FV-yaC" secondAttribute="trailing" id="m9B-Tk-4pc"/>
+                <constraint firstAttribute="bottom" secondItem="cWv-FV-yaC" secondAttribute="bottom" id="q86-Ke-Gp8"/>
+            </constraints>
+            <size key="customSize" width="197" height="299"/>
+            <connections>
+                <outlet property="bookPic" destination="aXj-oO-rgf" id="fsM-hf-X39"/>
+                <outlet property="decritionLabel" destination="Dg0-wp-pNj" id="aH1-LC-eL6"/>
+                <outlet property="imageViewPic" destination="aJa-LS-sKF" id="zvT-wr-8zs"/>
+            </connections>
+            <point key="canvasLocation" x="397.5" y="275.5"/>
+        </collectionViewCell>
+    </objects>
+</document>

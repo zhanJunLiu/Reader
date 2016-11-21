@@ -1,0 +1,66 @@
+//
+//  DDBookStoreViewController.swift
+//  CHReadingBook
+//
+//  Created by zhuzi on 16/9/18.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+class DDBookStoreViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout {
+    
+    var collection: UICollectionView?
+
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        createUI()
+    }
+
+    //MARK: - 创建UI
+    func createUI() {
+        //创建网格布局对象
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.scrollDirection = UICollectionViewScrollDirection.Vertical
+//        flowLayout.itemSize = CGSizeMake((SCREEN_W - 20) / 3, 160)
+        flowLayout.minimumInteritemSpacing = 0
+        //cell行距
+        flowLayout.minimumLineSpacing = 0
+        
+        //创建网格对象
+        self.collection = UICollectionView(frame: CGRectMake(0, 0, SCREEN_W, SCREEN_H - (SCREEN_H/4 + 64 + 44)), collectionViewLayout: flowLayout)
+        self.collection!.delegate = self
+        self.collection!.dataSource = self
+        
+        self.collection?.backgroundColor = UIColor.whiteColor()
+        //关闭竖向滑条
+        self.collection!.showsVerticalScrollIndicator = false
+        self.view.addSubview(self.collection!)
+        
+        //注册cell
+        let nib = UINib(nibName: "DDBookStoreCollectionViewCell", bundle: nil)
+        self.collection!.registerNib(nib, forCellWithReuseIdentifier: "DDBookStoreCollectionViewCell")
+    }
+    
+    //MARK: - 代理方法
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 1
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("DDBookStoreCollectionViewCell", forIndexPath: indexPath) as! DDBookStoreCollectionViewCell
+        
+        cell.imageViewPic.image = UIImage(named: "bei jing")
+        cell.bookPic.image = UIImage(named: "03委员读书_03")
+        cell.decritionLabel.text = "03委员读书_03"
+        return cell
+        
+    }
+    
+    //设置item的大小
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        return CGSizeMake(SCREEN_W / 3, SCREEN_H / 3 - 30)
+    }
+}

@@ -1,0 +1,61 @@
+//
+//  ZJReading.swift
+//  Scholar
+//
+//  Created by mac on 16/9/6.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+class ZJReading: NSObject {
+    
+    var committee_ren_head:         String? /** 委员头像 */
+    
+    var committee_ren_name:         String? /** 委员名字 */
+    
+    var committee_book_details:     String? /** 委员详情 */
+    
+    var committee_book_title:       String? /** 委员标题 */
+    
+    var committee_ren_id:           String? /** 委员id */
+    
+    var book_id:                    String? /** 图书id */
+    
+    var book_name:                  String? /** 图书名 */
+    
+    var book_pic:                   String? /** 图书封面 */
+    
+    var committee_id:               String? /** 委员信息id */
+    
+    init(dict: [String: AnyObject]) {
+        super.init()
+        setValuesForKeysWithDictionary(dict)
+    }
+    override func setValue(value: AnyObject?, forUndefinedKey key: String) {}
+    
+    class func loadHomeData(page: Int , finished: ((result: [ZJReading]?) -> ())) {
+        
+        var models = [ZJReading]()
+        
+        CHNetworkTools.sharedNetworkTool.get(READING_ALL_URL + "/p/\(page)", parameters: nil) { (success, result, error) in
+            
+            print("分页: \(page)")
+            
+            guard let result = result where result["status"] == "success" else {
+                finished(result: nil)
+                return
+            }
+            
+            let data = result["list"].arrayObject as! [[String : AnyObject]]
+                        
+            for dict in data {
+                
+                models.append(ZJReading(dict: dict))
+            }
+            
+            finished(result: models)
+            return
+        }
+    }
+}

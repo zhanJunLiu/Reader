@@ -1,0 +1,78 @@
+//
+//  DDNoteDetailsViewController.swift
+//  CHReadingBook
+//
+//  Created by zhuzi on 16/9/19.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+class DDNoteDetailsViewController: UIViewController {
+    
+    var tableView = UITableView()
+    
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        self.title = "笔记详情"
+        
+        createUI()
+    }
+    
+    //创建UI
+    func createUI() {
+        
+        tableView.frame = UIScreen.mainScreen().bounds
+        tableView.dataSource = self
+        tableView.delegate = self
+        view.addSubview(tableView)
+        
+        //注册cell
+        let nib = UINib(nibName: "DDNoteDetailsTableViewCell", bundle: nil)
+        tableView.registerNib(nib, forCellReuseIdentifier: "DDNoteDetailsTableViewCell")
+    }
+
+}
+
+extension DDNoteDetailsViewController: UITableViewDelegate,UITableViewDataSource {
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 10
+    }
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        var cell = tableView.dequeueReusableCellWithIdentifier("DDNoteDetailsTableViewCell") as? DDNoteDetailsTableViewCell
+        if cell == nil {
+            cell = DDNoteDetailsTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "DDNoteDetailsTableViewCell") as DDNoteDetailsTableViewCell
+        }
+        
+//        let model = LSYNoteModel()
+//        cell?.detailsLabel.text = model.content
+        
+        let content = NSUserDefaults.standardUserDefaults().objectForKey("content")
+        let date = NSUserDefaults.standardUserDefaults().objectForKey("date")
+        
+        if content == nil {
+            CHProgressHUD.showInfoWithStatus("主人还没做📒")
+            cell?.dataLabel.text = ""
+            cell?.detailsLabel.text = ""
+            cell?.annotateLabel.text = ""
+        }else {
+//            let mm = LSYReadModel()
+//            cell?.detailsLabel.text = mm.notes[indexPath.row] as? String
+            
+            cell?.detailsLabel.text = String(content!)
+            cell?.dataLabel.text = "· 10-16"
+            //        cell?.detailsLabel.text = "今天一大早，我还在甜甜的美梦中，就被爸爸吼醒了，爸爸把我揪了起来，因为我的作文没写好，爸爸气愤极了，厉声厉色地说：“让你写，你偏不听，总认为时间还早，现在抓狂了吧!下次再这样，我一定凑你一顿，看你还拖拉作业。”刚被爸爸臭骂了一顿，妈妈也赶来凑热闹，只见她狠狠地盯着我说：“该打，前六天，你悠闲得很，督促你写作业，你磨叽磨叽，一直不写，现在好了，没时间了，你却在那拼命赶，你说你做的对不对?”我听后，低着头，一吭也不敢吭，我敢讲一句话，肯定会挨打。妈妈见我不吱声，又大声吼道：“你能长记性吗?”我点点头说：“我下次一定改。”"
+            
+            cell?.annotateLabel.text = "注| 以后千万要注意"
+        }
+        
+        return cell!
+    }
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 310 * SCREEN_SCALE_HEIGHT
+    }
+}

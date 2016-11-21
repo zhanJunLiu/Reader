@@ -1,0 +1,154 @@
+//
+//  ZJReadingTableViewCell.swift
+//  Scholar
+//
+//  Created by mac on 16/9/6.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+import YYWebImage
+/** 标题大小 */
+private let titleSize: CGFloat = 17
+
+/** 作者文字大小 */
+private let nameSize: CGFloat = 17
+
+/** 描述文字大小 */
+private let desSize: CGFloat = 14
+
+/** 来源文字大小 */
+private let shuPinSize: CGFloat = 12
+
+class ZJReadingTableViewCell: UITableViewCell {
+    
+    let iconW : CGFloat = SCREEN_SCALE_WIDTH * 80
+    let iconH : CGFloat = SCREEN_SCALE_HEIGHT * 80
+    
+    var models: ZJReading?
+    
+    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        contentView.addSubview(bgView)
+        bgView.snp_makeConstraints { (make) in
+            make.top.equalTo(contentView).offset(SCREEN_SCALE_HEIGHT * 10)
+            make.left.equalTo(contentView).offset(SCREEN_SCALE_WIDTH * 20)
+            make.bottom.equalTo(contentView).offset(SCREEN_SCALE_HEIGHT * -10)
+            make.right.equalTo(contentView).offset(SCREEN_SCALE_WIDTH * -20)
+        }
+        
+        bgView.addSubview(imageV)
+        imageV.snp_makeConstraints { (make) in
+            make.centerY.equalTo(bgView)
+            make.top.equalTo(bgView).offset(SCREEN_SCALE_HEIGHT * 20)
+            make.right.equalTo(bgView).offset(SCREEN_SCALE_WIDTH * -20)
+            make.bottom.equalTo(bgView).offset(SCREEN_SCALE_HEIGHT * -20)
+            make.width.equalTo(SCREEN_SCALE_WIDTH * 200)
+        }
+        
+        bgView.addSubview(imgIcon)
+        imgIcon.snp_makeConstraints { (make) in
+            make.left.equalTo(bgView).offset(SCREEN_SCALE_WIDTH * 20)
+            make.top.equalTo(bgView).offset(SCREEN_SCALE_HEIGHT * 20)
+            make.size.equalTo(CGSizeMake(iconW, iconH))
+        }
+        
+        bgView.addSubview(lblTitle)
+        lblTitle.snp_makeConstraints { (make) in
+            make.left.equalTo(imgIcon.snp_right).offset(SCREEN_SCALE_WIDTH * 20)
+            make.centerY.equalTo(imgIcon)
+            
+        }
+        
+        bgView.addSubview(lblIDName)
+        lblIDName.snp_makeConstraints { (make) in
+            make.top.equalTo(imgIcon.snp_bottom).offset(SCREEN_SCALE_HEIGHT * 20)
+            make.left.equalTo(imgIcon)
+            make.right.equalTo(imageV.snp_left).offset(SCREEN_SCALE_WIDTH * -20)
+        }
+
+        bgView.addSubview(lblDis)
+        lblDis.snp_makeConstraints { (make) in
+            make.top.equalTo(lblIDName.snp_bottom).offset(SCREEN_SCALE_HEIGHT * 20)
+            make.left.equalTo(lblIDName)
+            make.right.equalTo(lblIDName)
+            make.height.equalTo(SCREEN_SCALE_HEIGHT * 80)
+        }
+      
+        bgView.addSubview(lblSource)
+        lblSource.snp_makeConstraints { (make) in
+            make.bottom.equalTo(bgView).offset(SCREEN_SCALE_HEIGHT * -20)
+            make.left.equalTo(lblDis)
+        }
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private lazy var imgIcon: UIButton = {
+        let head = UIButton()
+        return head
+    }()
+    
+    private lazy var lblTitle: UILabel = {
+        let title = UILabel()
+//        title.font = UIFont.systemFontOfSize(titleSize)
+//        title.font = UIFont(name: "Hiragino Sans ", size: 6 * pxSizePt)
+        return title
+    }()
+    
+    private lazy var lblIDName: UILabel = {
+        let idName = UILabel()
+//        idName.font = UIFont.systemFontOfSize(nameSize)
+        return idName
+    }()
+    
+    private lazy var lblDis: UILabel = {
+        let dis = UILabel()
+//        dis.font = UIFont.systemFontOfSize(desSize)
+        dis.numberOfLines = 0
+        return dis
+    }()
+    
+    private lazy var lblSource: UILabel = {
+        let source = UILabel()
+//        source.textColor = UIColor.orangeColor()
+        source.textColor = UIColor.colorWithString("#ff5032")
+//        source.font = UIFont.systemFontOfSize(shuPinSize)
+        return source
+    }()
+    
+    private lazy var imageV: UIImageView = {
+        let imageV = UIImageView()
+        return imageV
+    }()
+    
+    
+    private lazy var bgView: UIView = {
+        let bgView = UIView()
+        bgView.backgroundColor = UIColor.whiteColor()
+        bgView.layer.cornerRadius = 5
+        bgView.layer.masksToBounds = true
+        return bgView
+    }()
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        lblTitle.text = models?.committee_ren_name
+        lblTitle.font = UIFont(name: "Hiragino Sans", size: 60 * pxSizePt)
+        lblIDName.text = models?.book_name
+        lblIDName.font = UIFont(name: "Hiragino Sans", size: 62 * pxSizePt)
+        lblDis.text = models?.committee_book_details
+        lblDis.font = UIFont(name: "Hiragino Sans", size: 40 * pxSizePt)
+        lblSource.text = "评书<<\(models?.book_name ?? "")>>"
+        lblSource.font = UIFont(name: "Hiragino Sans", size: 36 * pxSizePt)
+        imageV.yy_setImageWithURL(NSURL(string: "\(BASE_URL)\(models?.book_pic ?? "")"), placeholder: UIImage(named: "tuzuo"))
+        imageV.layer.shadowOpacity = 0.5
+        imageV.layer.shadowColor = UIColor.blackColor().CGColor
+        imageV.layer.shadowOffset = CGSize(width: 1, height: 1)
+        imgIcon.yy_setImageWithURL(NSURL(string: "\(BASE_URL)\(models?.committee_ren_head ?? "")"), forState: .Normal, placeholder: UIImage(named: "占位图"))
+    }
+}

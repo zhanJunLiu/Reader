@@ -1,0 +1,91 @@
+//
+//  ZJMyNotesViewController.swift
+//  Book
+//
+//  Created by mac on 16/9/12.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+class ZJMyNotesViewController: ZJMainVc,UIScrollViewDelegate {
+    
+    var segment = UISegmentedControl()
+    var scrollView = UIScrollView()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+            
+        //创建segment
+        createSegment()
+        //创建scrollerView
+        createScrollView()
+    }
+    
+    //MARK: - 创建segment
+    func createSegment() {
+        self.segment = UISegmentedControl(frame: CGRect(x: -2, y: 64, width: SCREEN_W+4, height: 44))
+        self.segment.tintColor = UIColor.grayColor()
+        self.segment.insertSegmentWithTitle("我的笔记", atIndex: 0, animated: true)
+        self.segment.insertSegmentWithTitle("购买记录", atIndex: 1, animated: true)
+        
+        //去掉边框颜色
+        //        self.segment.tintColor = UIColor.clearColor()
+        self.segment.tintColor = ZJColor(153, g: 163, b: 175, a: 0.6)
+        
+        //设置一个字体的字典，内容为没点击的字体大小和颜色
+        let unselectedTextAttributes: NSDictionary = [NSFontAttributeName: UIFont.boldSystemFontOfSize(16),NSForegroundColorAttributeName: UIColor ( red: 0.604, green: 0.5857, blue: 0.5528, alpha: 1.0 )];
+        self.segment.setTitleTextAttributes(unselectedTextAttributes as[NSObject :AnyObject], forState: UIControlState.Normal)
+        //点击之后的字体大小和颜色
+        //        let selectedTextAttributes: NSDictionary = [NSFontAttributeName: UIFont.boldSystemFontOfSize(16),NSForegroundColorAttributeName: UIColor ( red: 0.3915, green: 0.6216, blue: 1.0, alpha: 1.0 )]
+        let selectedTextAttributes: NSDictionary = [NSFontAttributeName: UIFont.boldSystemFontOfSize(16),NSForegroundColorAttributeName: UIColor.redColor()]
+        self.segment.setTitleTextAttributes(selectedTextAttributes as[NSObject :AnyObject], forState: UIControlState.Selected)
+        
+        
+        self.segment.addTarget(self, action: #selector(ZJMyNotesViewController.changedValue(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        self.view.addSubview(self.segment)
+        
+        self.segment.selectedSegmentIndex = 0
+    }
+    
+    //MARK: - 关联scrollerView
+    func changedValue(seg: UISegmentedControl) {
+        self.scrollView.contentOffset = CGPoint(x: CGFloat(seg.selectedSegmentIndex) * SCREEN_W, y: 0)
+    }
+    
+    //MARK: - 创建scrollerView
+    func createScrollView() {
+        self.scrollView = UIScrollView(frame: CGRect(x: 0, y: self.segment.height+64, width: SCREEN_W, height: SCREEN_H - segment.height-64))
+        self.scrollView.pagingEnabled = true
+        self.scrollView.showsVerticalScrollIndicator = false
+        self.scrollView.contentSize = CGSize(width: 2 * SCREEN_W, height: 0)
+        self.scrollView.delegate = self
+        
+        self.view.addSubview(self.scrollView)
+        
+        //实例化自控制器
+        let myNotes = DDNoteViewController()
+        let buyRecord = DDBuyRecordViewController()
+        
+        let myArray = [myNotes, buyRecord]
+        
+        for item in 0..<myArray.count {
+            let vc = myArray[item]
+            vc.view.frame = CGRectMake(CGFloat(item) * SCREEN_W, 64, SCREEN_W, self.scrollView.height)
+            
+            self.scrollView.addSubview(vc.view)
+            self.addChildViewController(vc)
+        }
+        
+    }
+    
+    //MARK: - 反向关联segment
+    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+
+        let index = scrollView.contentOffset.x / SCREEN_W
+        self.segment.selectedSegmentIndex = Int(index)
+        
+    }
+
+    
+}

@@ -1,0 +1,64 @@
+//
+//  DDBuyRecordViewController.swift
+//  CHReadingBook
+//
+//  Created by zhuzi on 16/9/19.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+class DDBuyRecordViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+    
+    var tableView = UITableView()
+    
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        //创建UI
+        createUI()
+    }
+
+    //创建UI
+    func createUI() {
+        self.tableView = UITableView(frame: CGRectMake(0, -64, SCREEN_W, SCREEN_H-64-44), style: UITableViewStyle.Plain)
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
+        self.view.addSubview(self.tableView)
+        
+        //注册cell
+        let nib = UINib(nibName: "DDBuyRecordTableViewCell", bundle: nil)
+        self.tableView.registerNib(nib, forCellReuseIdentifier: "DDBuyRecordTableViewCell")
+        
+    }
+    
+    //MARK: 代理方法
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 20
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("DDBuyRecordTableViewCell", forIndexPath: indexPath) as! DDBuyRecordTableViewCell
+        
+        cell.bookPic.image = UIImage(named: "03委员读书_07")
+        cell.bookTitle.text = "我在政协这一年"
+        
+//        cell.textLabel?.text = "34567890"
+        return cell
+        
+    }
+    
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 320 * SCREEN_SCALE_HEIGHT
+    }
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        let vc = DDBuyDetailsViewController()
+        vc.view.backgroundColor = UIColor.whiteColor()
+        self.navigationController?.pushViewController(vc, animated: true)
+        
+    }
+
+}

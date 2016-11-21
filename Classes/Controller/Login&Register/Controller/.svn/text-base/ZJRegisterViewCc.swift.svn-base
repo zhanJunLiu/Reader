@@ -1,0 +1,252 @@
+//
+//  ZJRegisterViewController.swift
+//  Book
+//
+//  Created by mac on 16/9/9.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+import SVProgressHUD
+
+protocol ZJRegisterViewControllerDelegate: NSObjectProtocol {
+    
+    func registerSuccess(user_id: String, password: String)
+}
+
+/** 获取验证时间*/
+private var  SMSLoginTime: Int = 60
+
+class ZJRegisterViewController: ZJMainVc {
+
+    let registerView = ZJRegisterView()
+    
+     weak var delegate: ZJRegisterViewControllerDelegate?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        registerView.frame = view.bounds
+        self.view.addSubview(registerView)
+        
+        self.navigationController?.navigationBarHidden = false
+        
+        registerView.txtIPhone.addTarget(self, action: #selector(ZJRegisterViewController.textFieldChangeText), forControlEvents: .EditingChanged)
+        registerView.txtInputVerifty.addTarget(self, action: #selector(ZJRegisterViewController.textFieldChangeText), forControlEvents: .EditingChanged)
+        registerView.txtInputPassword.addTarget(self, action: #selector(ZJRegisterViewController.textFieldChangeText), forControlEvents: .EditingChanged)
+        
+        /** 注册界面按钮点击事件 */
+        registerView.btnSubmit.addTarget(self, action: #selector(didClickSubmitButton(_:)), forControlEvents: .TouchUpInside)
+        registerView.btnBack.addTarget(self, action: #selector(didClickBackButton(_:)), forControlEvents: .TouchUpInside)
+        registerView.btnSendVerify.addTarget(self, action: #selector(didClickVeriftyButton(_:)), forControlEvents: .TouchUpInside)
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
+        
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        view.endEditing(true)
+    }
+    
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
+    }
+    
+    /**
+     键盘即将显示
+     */
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        let userInfo = notification.userInfo!
+        
+        let beginHeight = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).CGRectValue().size.height
+        let endHeight = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue().size.height
+        
+        if beginHeight < 0 && endHeight < 0 {
+            UIView.animateWithDuration(0.25) {
+                self.view.transform = CGAffineTransformMakeTranslation(0, -endHeight + (SCREEN_H - CGRectGetMaxY(self.registerView.btnSendVerify.frame)) - 10)
+            }
+        }
+    }
+    
+    /**
+     键盘即将隐藏
+     */
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        UIView.animateWithDuration(0.25) {
+            self.view.transform = CGAffineTransformIdentity
+        }
+    }
+}
+
+/** 注册界面控件事件 */
+extension ZJRegisterViewController {
+    
+    /** 返回按钮 */
+    @objc private func didClickBackButton(button: UIButton) {
+        
+        dismissViewControllerAnimated(true, completion: nil)        
+    }
+    
+    /** 获取手机验证码 */
+    @objc private func didClickVeriftyButton(button: UIButton) {
+        
+        let phone = registerView.txtIPhone.text
+        if phone == "" {
+            SVProgressHUD.showErrorWithStatus("手机号不能为空")
+            return
+        }
+        
+        SMSSDK.getVerificationCodeByMethod(SMSGetCodeMethodSMS, phoneNumber: registerView.txtIPhone.text, zone: "86", customIdentifier: nil) { (error) in
+            self.setTime(SMSLoginTime)
+            if (error == nil) {
+                print("获取验证码成功")
+            }else {
+                print("错误信息: \(error)")
+            }
+        }
+    }
+    
+    /** 重新获取验证码 */
+    @objc private func sendsms(sender:UIButton){
+        setTime(SMSLoginTime)
+        print("获取验证码")
+    }
+    
+    /** 提交按钮 */
+    @objc private func didClickSubmitButton(button: UIButton) {
+        
+        print("提交 -> ")
+        print("Phone: \(registerView.txtIPhone.text)")
+        print("verifty: \(registerView.txtInputVerifty.text)")
+        print("password: \(registerView.txtInputPassword.text)")
+        
+        let verifty = registerView.txtInputVerifty.text
+        let password = registerView.txtInputPassword.text
+        if verifty == "" && password == "" {
+            SVProgressHUD.showErrorWithStatus("手机号不能为空或者密码不能为空")
+            return
+        }
+        SMSSDK.commitVerificationCode(registerView.txtInputVerifty.text, phoneNumber: registerView.txtIPhone.text, zone: "86") { (error) in
+            if error == nil {
+                print("验证成功")
+                CHProgressHUD.showWithStatus("正在提交")
+                ZJAccountModel.normalAccountRegister("tel", username: self.registerView.txtIPhone.text!, password: self.registerView.txtInputPassword.text!, finished: { (success, tip) in
+                    if success {
+                        CHProgressHUD.dismiss()
+                        self.delegate?.registerSuccess(self.registerView.txtIPhone.text!, password: self.registerView.txtInputPassword.text!)
+                    }else {
+                        CHProgressHUD.showInfoWithStatus(tip)
+                    }
+                })
+            }else {
+                print("错误信息: \(error)")
+            }
+        }
+    }
+    
+    //MARK:点击事件
+    //输入账号密码
+    @objc
+    private func textFieldChangeText(){
+        
+        if registerView.txtIPhone.text!.isTelNumber(){
+            
+            registerView.btnSendVerify.enabled = true
+            
+            registerView.btnSubmit.enabled = registerView.txtIPhone.hasText() &&
+                registerView.txtInputVerifty.hasText() &&
+                registerView.txtInputPassword.hasText()
+            
+        } else {
+            registerView.btnSendVerify.enabled = false
+        }
+    }
+    
+//    /**
+//     键盘即将显示
+//     */
+//    @objc private func keyboardWillShow(notification: NSNotification) {
+//        let userInfo = notification.userInfo!
+//        
+//        let beginHeight = (userInfo[UIKeyboardFrameBeginUserInfoKey] as! NSValue).CGRectValue().size.height
+//        let endHeight = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue().size.height
+//        
+//        if beginHeight > 0 && endHeight > 0 {
+//            UIView.animateWithDuration(0.25) {
+//                self.view.transform = CGAffineTransformMakeTranslation(0, -endHeight + (SCREEN_H - CGRectGetMaxY(self.registerView.btnSubmit.frame)) - 10)
+//            }
+//        }
+//    }
+//    
+//    /**
+//     键盘即将隐藏
+//     */
+//    @objc private func keyboardWillHide(notification: NSNotification) {
+//        UIView.animateWithDuration(0.25) {
+//            self.view.transform = CGAffineTransformIdentity
+//        }
+//    }
+    
+}
+
+/** textField的点击触发事件 */
+extension ZJRegisterViewController: UITextFieldDelegate {
+    
+    func setTime(SMSLoginTimeOut:Int) {
+        
+        var loginTimeOut = SMSLoginTimeOut
+        
+        let loginQueue: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        let loginTimer: dispatch_source_t  = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,loginQueue)
+        /** 每秒执行 */
+        dispatch_source_set_timer(loginTimer, dispatch_walltime(nil, 0), 1 * NSEC_PER_SEC, 0)
+        
+        dispatch_source_set_event_handler(loginTimer, {
+            
+            if loginTimeOut <= 0 {
+                dispatch_source_cancel(loginTimer);
+                
+                dispatch_sync(dispatch_get_main_queue(), {
+                    /** 设置界面的按钮显示*/
+                    self.registerView.btnSendVerify.setTitle("获取验证码", forState: UIControlState.Normal)
+                    
+                    self.registerView.btnSendVerify.setTitleColor(UIColor.whiteColor(), forState: .Normal)
+                    self.registerView.btnSendVerify.backgroundColor = UIColor.colorWithString("#2ed0cc")
+                    self.registerView.btnSendVerify.userInteractionEnabled = true
+                    self.registerView.btnSendVerify.addTarget(self, action: #selector(self.sendsms(_:)), forControlEvents: .TouchUpInside)
+                })
+            }else{
+                /** 倒计时 */
+                let seconds = loginTimeOut % 60
+                let strTime = NSString.localizedStringWithFormat("%.2d", seconds)
+                
+                dispatch_sync(dispatch_get_main_queue(), {
+                    
+                    /** 开启动画*/
+                    //UIView.beginAnimations(nil, context: nil)
+                    /** 动画时长*/
+                    //UIView.setAnimationDuration(1)
+                    /** 设置界面的按钮显示*/
+                    self.registerView.btnSendVerify.setTitle(NSString.localizedStringWithFormat("重新发送(%@)", strTime) as String, forState: UIControlState.Normal)
+                    
+                    self.registerView.btnSendVerify.setTitleColor(UIColor.blackColor(), forState: .Normal)
+                    self.registerView.btnSendVerify.backgroundColor = UIColor.whiteColor()
+                    
+                    /** 提交动画 */
+                    //UIView.commitAnimations()
+                    self.registerView.btnSendVerify.userInteractionEnabled = false
+                })
+                loginTimeOut -= 1;
+            }
+        })
+        dispatch_resume(loginTimer)
+    }
+}
+

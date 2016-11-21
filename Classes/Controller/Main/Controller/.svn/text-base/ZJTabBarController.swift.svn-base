@@ -1,0 +1,102 @@
+//
+//  ZJTabBarController.swift
+//  Book
+//
+//  Created by 刘战军 on 16/9/11.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+let kAllowAutoRotateNotification    = "AllowAutoRotate"
+
+let kForbidenAutoRotateNotification = "forbidenAutoRotate"
+
+class ZJTabBarController: UITabBarController {
+  
+    var shouldRotate: Bool = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupChildControllers()
+        
+        setupNot()
+        
+        let tabBar = ZJTabBarView()
+        tabBar.backgroundColor = kTabBar_bg
+        tabBar.frame = self.tabBar.bounds
+        self.tabBar.addSubview(tabBar)
+        
+    }
+
+    //添加子控制器
+    private func setupChildControllers(){
+        
+        loadChildControllers(ZJRecommendViewController(), "xinshu","新书推荐")
+        loadChildControllers(ZJStackRoomViewController(), "shuku","政协书库")
+        loadChildControllers(ZJReadingViewController(), "dushu", "委员读书")
+        loadChildControllers(ZJProfileViewController(), "wode", "我的书库")
+    }
+    
+    private func setupNot(){
+        
+        NSNotificationCenter.defaultCenter().addObserver(
+            self,
+            selector: #selector(changeShouldRotate(_:)),
+            name: kAllowAutoRotateNotification,
+            object: nil)
+        
+        NSNotificationCenter.defaultCenter().addObserver(
+            self,
+            selector: #selector(changeShouldRotate(_:)),
+            name: kForbidenAutoRotateNotification,
+            object: nil)
+        
+    }
+    
+    private func loadChildControllers(childVC: UIViewController,_ imageName: String,_ titleName: String){
+        
+        //设置tabbar普通状态和选中状态的图片
+        childVC.tabBarItem.image = UIImage(named:imageName)?.imageWithRenderingMode(.AlwaysOriginal)
+        childVC.tabBarItem.selectedImage = UIImage(named: "\(imageName)_selected")?.imageWithRenderingMode(.AlwaysOriginal)
+        
+        //设置标题字体大小和颜色
+        childVC.title = titleName
+        UINavigationBar.appearance().titleTextAttributes = [NSFontAttributeName:UIFont.systemFontOfSize(18),NSForegroundColorAttributeName:UIColor.whiteColor()]
+        
+        //设置tabbar上面的字体颜色
+        let attr = [NSForegroundColorAttributeName:UIColor.colorWithString("#e14838")]
+        childVC.tabBarItem.setTitleTextAttributes(attr, forState: .Selected)
+        
+        addChildViewController(ZJBaseNavVc(rootViewController: childVC))
+    }
+    
+    
+    @objc
+    private func changeShouldRotate(notifi: NSNotification){
+        
+        switch notifi.name {
+        case kAllowAutoRotateNotification   : shouldRotate = true
+        case kForbidenAutoRotateNotification: shouldRotate = false
+        default: break
+        }
+        
+    }
+    
+    //设置转屏支持的方向
+    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
+        return .AllButUpsideDown
+    }
+    
+    //默认不开启旋转，如果subclass需要支持屏幕旋转，重写这个方法return YES即可
+    override func shouldAutorotate() -> Bool {
+        return shouldRotate
+    }
+    
+    deinit{
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
+    
+    
+}

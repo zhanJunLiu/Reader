@@ -1,0 +1,911 @@
+//
+//  MTUserInfoViewControllerNEW.swift
+//  art-teacher
+//
+//  Created by 刘战军 on 16/8/1.
+//  Copyright © 2016年 com.etudetime. All rights reserved.
+//
+
+import UIKit
+import SVProgressHUD
+import YYModel
+
+
+private let MTUserInfoIconIdentifier        : String  = "MTUserInfoIconCellIdentifier"
+
+private let MTUserInfoNameIdentifier        : String  = "MTUserInfoNameCellIdentifier"
+
+private let MTUserInfoSexIdentifier         : String  = "MTUserInfoSexCellIdentifier"
+
+private let MTUserInfoAgeIdentifier         : String  = "MTUserInfoAgeCellIdentifier"
+
+private let MTUserInfoDreamSchoolIdentifier : String  = "MTUserInfoDreamSchoolCellIdentifier"
+
+private let MTUserInfoDreamMajorIdentifier  : String  = "MTUserInfoDreamMajorCellIdentifier"
+
+
+private let setSexH : CGFloat = 155
+
+private let setDatePickerH : CGFloat = 260
+
+@objc protocol MTUserInfoViewControllerNEWDelegate: NSObjectProtocol {
+    
+    optional func setDateStirng(dateStr: String)
+    optional func userInfoImage(imgName: UIImage)
+    optional func userInfoName(nickName: String)
+}
+
+
+class MTUserInfoViewControllerNEW: UITableViewController {
+    
+    /** 用户数据 */
+    private var userData         :MTRequestUserDataModel?
+    
+    /** 头像cell*/
+    var iconImageView            :MTUserInfoIconTableViewCell?
+    
+    /** 名字cell*/
+    var nikeNameTableViewCell    :MTUserInfoNameTableViewCell?
+    
+    /** 性别cell*/
+    var sexTableViewCell         :MTUserInfoSexTableViewCell?
+    
+    /** 年龄cell*/
+    var ageTableViewCell         :MTUserInfoAgeTableViewCell?
+    
+    /** 理想学校cell*/
+    var dreamSchoolTableViewCell :MTUserInfoDreamSchoolTableViewCell?
+    
+    /** 理想专业cell*/
+    var dreamMajorTableViewCell  :MTUserInfoDreamMajorTableViewCell?
+    
+    @IBOutlet weak var workcontent: UITextView!
+    
+    var delegate : MTUserInfoViewControllerNEWDelegate?
+    
+    /** 底部保存按钮*/
+//    private lazy var userInfoSaveView : UIView = {
+//        let userInfoSaveView = UIView()
+//        userInfoSaveView.frame = CGRectMake(0, 0, UIScreen.mainScreen().bounds.size.width, 100)
+//        
+//        let userInfoSaveBtn = UIButton()
+//        userInfoSaveBtn.setTitle("保存", forState: .Normal)
+//        userInfoSaveBtn.setButtonImage(norImage: "Login_15")
+//        userInfoSaveBtn.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickUserInfoSave(_:)), forControlEvents: .TouchUpInside)
+//        userInfoSaveView.addSubview(userInfoSaveBtn)
+//        
+//        userInfoSaveBtn.snp_makeConstraints { (make) in
+//            make.left.equalTo(userInfoSaveView.snp_left).offset(15)
+//            make.top.equalTo(userInfoSaveView.snp_top).offset(40)
+//            make.right.equalTo(userInfoSaveView.snp_right).offset(-15)
+//            make.height.equalTo(44)
+//        }
+//        
+//        return userInfoSaveView
+//    }()
+    
+    
+    /// 定义一个全局datePicker
+    var datePicker: UIDatePicker!
+    
+    /** 性别灰色蒙版*/
+    var sexBgView = UIView()
+    /** 性别弹框视图*/
+    private var sexView = UIView()
+    
+    /** 头像灰色蒙版*/
+    var iconBgView = UIView()
+    /** 头像弹框视图*/
+    private var iconView = UIView()
+    
+    
+    /** 日期选择背景View*/
+    private var datePickerBgView = UIView()
+    
+    
+    private let sexWindow: UIWindow = UIApplication.sharedApplication().keyWindow!
+    
+    private let iconWindow: UIWindow = UIApplication.sharedApplication().keyWindow!
+    
+    /** 男生按钮*/
+    var MTSexManBtn : UIButton?
+    
+    /** 女生按钮*/
+    var MTSexWomanBtn: UIButton?
+    
+    /** 按钮绑定的tag值*/
+    var MTSexBtnTag : Int? = nil
+    
+    /** 缓存地址*/
+    private var cachePath: String?
+    
+    private var userInfoData = [[String:String]]()
+    
+    //    private var userModel = MTRequestUserDataModel.UserInfoManager
+    
+    /** 创建系统相机相册*/
+    let picker = UIImagePickerController()
+    
+    var selected :Bool = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        tableView.scrollEnabled = false
+        
+        MTSexManBtn?.selected = true
+        MTSexWomanBtn?.selected = true
+        setUI()
+        //注册点击事件
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(MTUserInfoViewControllerNEW.handleTap(_:))))
+        userData = MTRequestUserDataModel().get()
+        
+        /** 保存用户信息 */
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "保存", style: .Plain, target: self, action: #selector(MTUserInfoViewControllerNEW.clickUserInfoSave(_:)))
+    }
+    
+    
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+            }
+    
+    private func userInfoIsQau(userInfo: String) -> String{
+        
+        if userInfo.isQaulity(){
+            return userInfo
+        }
+        return "请设置"
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        
+    }
+    
+    
+    var usertextfild = UITextField()
+    
+    func updateAge(age:String) -> String {
+        return ""
+    }
+}
+
+extension MTUserInfoViewControllerNEW {
+    private func setUI(){
+        
+        title = "个人资料"
+        
+        tableView.registerClass(MTUserInfoIconTableViewCell.self, forCellReuseIdentifier: MTUserInfoIconIdentifier)
+        
+        tableView.registerClass(MTUserInfoNameTableViewCell.self, forCellReuseIdentifier: MTUserInfoNameIdentifier)
+        
+        tableView.registerClass(MTUserInfoSexTableViewCell.self, forCellReuseIdentifier: MTUserInfoSexIdentifier)
+        
+        tableView.registerClass(MTUserInfoAgeTableViewCell.self, forCellReuseIdentifier: MTUserInfoAgeIdentifier)
+        
+        tableView.registerClass(MTUserInfoDreamSchoolTableViewCell.self, forCellReuseIdentifier: MTUserInfoDreamSchoolIdentifier)
+        
+        tableView.registerClass(MTUserInfoDreamMajorTableViewCell.self, forCellReuseIdentifier: MTUserInfoDreamMajorIdentifier)
+        
+        
+//        tableView.tableFooterView = userInfoSaveView
+        
+        //userData = MTRequestUserDataModel.UserInfoManager
+        
+    }
+    /**
+     点击保存信息按钮
+     
+     - nikeName:	用户昵称
+     - age:         用户名字
+     - gender:        性别
+     - dreamSchool: 理想学校
+     - dreamMajor:  理想专业
+     */
+    func clickUserInfoSave(sender:UIButton) {
+//        let nikeName = nikeNameTableViewCell?.UserInfoName.text
+//        userData?.nikeName=nikeName!
+//        userData?.imgCompressUrl = "\(iconImageView?.UserInfoIcon.image)"
+//        userData?.nikeName = (nikeNameTableViewCell?.UserInfoName.text)!
+//        userData?.gender = Int((sexTableViewCell?.UserInfoSex.text)!)!
+//        userData?.age = Int((ageTableViewCell?.UserInfoBirthName.text)!)!
+        
+//        let headView = ZJMineHeaderView()
+//        headView.iconButton.setImage(iconImageView?.UserInfoIcon.image, forState: UIControlState.Normal)
+//        headView.nameLabel.text = nikeNameTableViewCell?.UserInfoName.text
+
+        ZJAccountModel.shareAccount()?.nickname = nikeNameTableViewCell?.UserInfoName.text
+        ZJAccountModel.shareAccount()?.avatar = "\(iconImageView?.UserInfoIcon.image)"
+        CHProgressHUD.showWithStatus("更新资料")
+        ZJAccountModel.updateUserInfo(ZJAccountModel.shareAccount()?.nickname ?? "", sex: 10, say: "签名") { (success) in
+            
+            if success {
+                ZJAccountModel.getSelfUserInfo({ (success) in
+                    if success {
+                        CHProgressHUD.dismiss()
+                        self.delegate?.userInfoName!((self.nikeNameTableViewCell?.UserInfoName.text)!)
+                        self.navigationController?.popViewControllerAnimated(true)
+                    }
+                })
+            }
+        }
+    }
+}
+
+
+extension MTUserInfoViewControllerNEW {
+    func didSelecRow() {
+        self.selected = false;
+    }
+
+    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return 2
+    }
+    
+    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 {
+            return 4
+        }else{
+            
+            return 0
+        }
+    }
+    
+    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        if indexPath.section == 0 && indexPath.row == 0 {
+            iconImageView = tableView.dequeueReusableCellWithIdentifier(MTUserInfoIconIdentifier, forIndexPath: indexPath)
+                as? MTUserInfoIconTableViewCell
+            //加载头像
+//            iconImageView?.UserInfoIcon.sd_setImageWithURL(NSURL(string: userData!.imgCompressUrl),placeholderImage: UIImage(named: "round_log"))
+            iconImageView?.backgroundColor = kUserBgColor
+            return iconImageView!
+        } else if indexPath.section == 0 && indexPath.row == 1 {
+            
+            nikeNameTableViewCell = tableView.dequeueReusableCellWithIdentifier(MTUserInfoNameIdentifier, forIndexPath: indexPath)
+                as? MTUserInfoNameTableViewCell
+            //加载名字
+//            nikeNameTableViewCell?.UserInfoName.text=userData?.nikeName
+            
+            return nikeNameTableViewCell!
+        } else if indexPath.section == 0 && indexPath.row == 2 {
+            sexTableViewCell = tableView.dequeueReusableCellWithIdentifier(MTUserInfoSexIdentifier, forIndexPath: indexPath)
+                as? MTUserInfoSexTableViewCell
+            
+            if MTSexWomanBtn?.tag == 21 {
+                sexTableViewCell?.index = MTSexWomanBtn?.tag
+            }else if MTSexManBtn?.tag == 20 {
+                sexTableViewCell?.index = MTSexManBtn?.tag
+            }
+            
+//            if MTSexBtnTag==20 {
+//                self.userData?.gender=1
+//            }else if(MTSexBtnTag==21){
+//                self.userData?.gender=2
+//            }
+//            //加载性别
+//            let flag = userData?.gender
+//            var sex = "男"
+//            if (flag == 2) {
+//                sex="女"
+//                
+//            }
+//             sexTableViewCell?.UserInfoSex.text=sex
+            
+            return sexTableViewCell!
+            
+        } else if indexPath.section == 0 && indexPath.row == 3 {
+            
+            ageTableViewCell = tableView.dequeueReusableCellWithIdentifier(MTUserInfoAgeIdentifier, forIndexPath: indexPath) as? MTUserInfoAgeTableViewCell
+            //加载年龄
+//            ageTableViewCell?.UserInfoBirthName.text=String((userData?.age)!)
+            return ageTableViewCell!
+            
+        } else if indexPath.section == 1 && indexPath.row == 0 {
+            dreamSchoolTableViewCell = tableView.dequeueReusableCellWithIdentifier(MTUserInfoDreamSchoolIdentifier, forIndexPath: indexPath) as? MTUserInfoDreamSchoolTableViewCell
+            //加载理想学校
+//            dreamSchoolTableViewCell?.UserInfoDreamSchoolName.text=userData?.dreamSchool
+            return dreamSchoolTableViewCell!
+        } else{
+            dreamMajorTableViewCell = tableView.dequeueReusableCellWithIdentifier(MTUserInfoDreamMajorIdentifier, forIndexPath: indexPath) as? MTUserInfoDreamMajorTableViewCell
+            //加载理想专业
+//            dreamMajorTableViewCell?.UserInfoDreamMajorName.text=userData?.dreamMajor
+            return dreamMajorTableViewCell!
+            
+        }
+        
+    }
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        if indexPath.section == 0 && indexPath.row == 0 {
+
+            setIcon()
+            print("头像")
+            
+        }else if indexPath.section == 0 && indexPath.row == 1 {
+            
+            print("名字")
+            
+        }else if indexPath.section == 0 && indexPath.row == 2 {
+            
+            print("性别")
+            setSex()
+
+        }else if indexPath.section == 0 && indexPath.row == 3 {
+            
+            
+            setDatePicker()
+            
+            showAnimation(datePickerBgView, viewH: setDatePickerH)
+            
+            
+        }else if indexPath.section == 1 && indexPath.row == 0 {
+            
+            print("理想学校")
+        }else{
+            
+            print("理想专业")
+        }
+    }
+    
+    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        
+        if indexPath.section == 0 && indexPath.row == 0 {
+            return SCREEN_SCALE_HEIGHT * 400
+            
+        }else{
+            
+            return 44
+        }
+    }
+    
+    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return  0.01
+    }
+    
+    override func tableView(tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        
+        return 0.01
+    }
+    
+    //收回键盘
+    func handleTap(sender: UITapGestureRecognizer) {
+            print("收回键盘")
+        nikeNameTableViewCell?.UserInfoName.resignFirstResponder()
+        dreamMajorTableViewCell?.UserInfoDreamMajorName.resignFirstResponder()
+        dreamSchoolTableViewCell?.UserInfoDreamSchoolName.resignFirstResponder()
+        sender.cancelsTouchesInView = false
+    }
+}
+
+extension MTUserInfoViewControllerNEW{
+    
+    func  setSex(){
+        
+        sexBgView.frame = CGRectMake(0, 0, SCREEN_W, SCREEN_H)
+        sexBgView.backgroundColor = UIColor ( red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5)
+        sexWindow.addSubview(sexBgView)
+        sexView.frame = CGRectMake(0, SCREEN_H, SCREEN_W, setSexH)
+        sexView.backgroundColor = UIColor.colorWithString("#EFEFF4")
+        sexBgView.addSubview(sexView)
+        
+        /**显示提示框*/
+        showAnimation(sexView, viewH: setSexH)
+        
+        self.MTSexManBtn = UIButton()
+        self.MTSexManBtn!.backgroundColor = UIColor.whiteColor()
+        self.MTSexManBtn!.setTitle("男", forState: .Normal)
+        
+        self.MTSexManBtn!.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        self.MTSexManBtn!.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickManBtn(_:)), forControlEvents: .TouchUpInside)
+        self.MTSexManBtn!.tag = 20
+        
+        
+        self.userData?.gender = 1
+        
+        let linview = UIView()
+        linview.backgroundColor = UIColor.lightGrayColor()
+        linview.alpha = 0.5
+        
+        self.MTSexWomanBtn = UIButton()
+        self.MTSexWomanBtn!.backgroundColor = UIColor.whiteColor()
+        self.MTSexWomanBtn!.setTitle("女", forState: .Normal)
+        self.MTSexWomanBtn!.tag = 21
+        
+        self.MTSexWomanBtn!.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        self.MTSexWomanBtn!.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickWoManBtn(_:)), forControlEvents: .TouchUpInside)
+        
+        let cancelBtn = UIButton()
+        cancelBtn.backgroundColor = UIColor.whiteColor()
+        cancelBtn.setTitle("取消", forState: .Normal)
+        cancelBtn.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        cancelBtn.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickCancelBtn(_:)), forControlEvents: .TouchUpInside)
+        
+        sexView.addSubview(self.MTSexManBtn!)
+        sexView.addSubview(linview)
+        sexView.addSubview(self.MTSexWomanBtn!)
+        sexView.addSubview(cancelBtn)
+        
+        self.MTSexManBtn!.snp_makeConstraints { (make) in
+            make.left.equalTo(sexView.snp_left)
+            make.right.equalTo(sexView.snp_right)
+            make.top.equalTo(sexView.snp_top)
+            make.height.equalTo(50)
+        }
+        linview.snp_makeConstraints { (make) in
+            make.left.equalTo(sexView.snp_left)
+            make.right.equalTo(sexView.snp_right)
+            make.top.equalTo(self.MTSexManBtn!.snp_bottom).offset(-0.5)
+            
+            make.height.equalTo(0.5)
+        }
+        self.MTSexWomanBtn!.snp_makeConstraints { (make) in
+            make.left.equalTo(sexView.snp_left)
+            make.right.equalTo(sexView.snp_right)
+            make.top.equalTo(self.MTSexManBtn!.snp_bottom)
+            make.height.equalTo(50)
+        }
+        
+        cancelBtn.snp_makeConstraints { (make) in
+            make.top.equalTo(self.MTSexWomanBtn!.snp_bottom).offset(5)
+            make.left.equalTo(sexView.snp_left)
+            make.right.equalTo(sexView.snp_right)
+            make.height.equalTo(50)
+        }
+        
+    }
+    
+    func clickManBtn(sender:UIButton) {
+        
+        sexTableViewCell?.UserInfoSex.text="男"
+        userData?.gender=1
+        hideAnimation(sexView,time: 0.2)
+        tableView.reloadData()
+    }
+    
+    
+    func clickWoManBtn(sender:UIButton) {
+        
+        sexTableViewCell?.UserInfoSex.text="女"
+        userData?.gender=2
+        MTSexBtnTag = sender.tag
+        hideAnimation(sexView,time: 0.2)
+        tableView.reloadData()
+    }
+    
+    func clickCancelBtn(sender:UIButton) {
+        print("点击了取消")
+        
+        
+        hideAnimation(sexView,time: 0.2)
+        tableView.reloadData()
+    }
+    
+    /** 性别点击事件 */
+    func setSexTouch() {
+        let touch = UITapGestureRecognizer()
+        touch.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.SexTouchClick(_:)))
+        touch.cancelsTouchesInView = false
+        touch.numberOfTapsRequired = 1
+        sexBgView.addGestureRecognizer(touch)
+    }
+    
+    func SexTouchClick(tap: UITapGestureRecognizer) {
+        hideAnimation(sexView,time: 0.5)
+        
+    }
+}
+//MARK: -
+//MARK: - 日期选择器
+//MARK: -
+extension MTUserInfoViewControllerNEW{
+    
+    func setDatePicker(){
+        
+        setDatePickerTouch()
+        
+        datePickerBgView.frame = CGRectMake(0, SCREEN_H, SCREEN_W, setDatePickerH)
+        
+        view.addSubview(datePickerBgView)
+        datePicker = UIDatePicker()
+        datePicker.datePickerMode = .Date
+        datePicker.locale = NSLocale(localeIdentifier:"zh_CN")
+        /** 设置默认时间*/
+        datePicker.date = NSDate()
+        /** 设置分钟表盘的时间间隔（必须能让60整除，默认是1分钟*/
+        // datePicker.minuteInterval = 5
+        
+        datePicker.backgroundColor = UIColor.colorWithString("#EFEFF4")
+        
+        datePicker.addTarget(self, action:#selector(MTUserInfoViewControllerNEW.datePickerValueChange(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        datePickerBgView.addSubview(datePicker)
+        let  linV = UIView()
+        linV.backgroundColor = UIColor.blackColor()
+        datePickerBgView.addSubview(linV)
+        
+        datePicker.snp_makeConstraints { (make) in
+            make.left.equalTo(datePickerBgView.snp_left)
+            make.right.equalTo(datePickerBgView.snp_right)
+            make.top.equalTo(datePickerBgView.snp_top)
+            make.bottom.equalTo(datePickerBgView.snp_bottom).offset(-50)
+        }
+        
+        linV.snp_makeConstraints { (make) in
+            make.top.equalTo(datePickerBgView.snp_top)
+            make.width.equalTo(datePickerBgView.width)
+            make.height.equalTo(1)
+        }
+    }
+    
+    
+    func datePickerValueChange(sender: UIDatePicker) {
+        
+        let beforeFormatter = NSDateFormatter()
+        beforeFormatter.dateFormat = "yyyy"
+        let beforeTime = (beforeFormatter.stringFromDate(datePicker.date) as NSString).intValue
+        print(beforeTime)
+        
+        let time = NSDate()
+        let currentFormatter = NSDateFormatter()
+        currentFormatter.dateFormat = "yyyy"
+        currentFormatter.locale = NSLocale(localeIdentifier: "en")
+        let currentTime = (currentFormatter.stringFromDate(time) as NSString).intValue
+        print(currentTime)
+        
+        //        finished(result: dateString)
+        
+        
+        let difference = currentTime - beforeTime
+        print(difference)
+        guard difference > 0 else {
+            let actionAlert = UIAlertController(title: "年龄选择错误", message: nil, preferredStyle: .Alert)
+            let cancelBtn = UIAlertAction(title: "取消", style: .Cancel, handler: nil)
+            actionAlert.addAction(cancelBtn)
+            
+            presentViewController(actionAlert, animated: true, completion: nil)
+            print("年龄错误")
+            return
+        }
+        
+        ageTableViewCell?.UserInfoBirthName.text=String(difference)
+        userData?.age=Int(difference)
+        tableView.reloadData()
+        hideAnimation(datePickerBgView,time: 1)
+    }
+    
+    //日期选择器 点击事件
+    func setDatePickerTouch() {
+        let touch = UITapGestureRecognizer()
+        touch.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.DatePickerTouchClick(_:)))
+        touch.cancelsTouchesInView = false
+        touch.numberOfTapsRequired = 1
+        view.addGestureRecognizer(touch)
+    }
+    
+    func DatePickerTouchClick(tap: UITapGestureRecognizer) {
+        hideAnimation(datePickerBgView,time: 0.5)
+    }
+    
+}
+
+
+extension MTUserInfoViewControllerNEW{
+    
+    func showAnimation(bgView: UIView, viewH: CGFloat){
+        
+        UIView.animateWithDuration(0.2) {
+            var frame : CGRect = bgView.frame
+            frame.origin.y =  SCREEN_H - viewH
+            bgView.frame = frame
+        }
+    }
+    
+    
+    func hideAnimation(bgView: UIView , time:NSTimeInterval){
+        
+        UIView.animateWithDuration(time, animations: {
+            var frame : CGRect = bgView.frame
+            frame.origin.y =  SCREEN_H
+            bgView.frame = frame
+        }) { (finished) in
+            //删除性别背景蒙版
+            self.sexBgView.removeFromSuperview()
+            
+            //删除相机背景蒙版
+            self.iconBgView.removeFromSuperview()
+            
+        }
+        
+    }
+    
+}
+
+//设置头像选择
+extension MTUserInfoViewControllerNEW{
+    
+    func setIcon() {
+        
+        iconBgView.frame = CGRectMake(0, 0, SCREEN_W, SCREEN_H)
+        iconBgView.backgroundColor = UIColor ( red: 0.0, green: 0.0, blue: 0.0, alpha: 0.5)
+        iconWindow.addSubview(iconBgView)
+        iconView.frame = CGRectMake(0, SCREEN_H, SCREEN_W, setSexH)
+        iconView.backgroundColor = UIColor.colorWithString("#EFEFF4")
+        iconBgView.addSubview(iconView)
+        
+        /**显示提示框*/
+        showAnimation(iconView, viewH: setSexH)
+        
+        //拍照
+        let cameraBtn = UIButton()
+        cameraBtn.backgroundColor = UIColor.whiteColor()
+        cameraBtn.setTitle("拍照", forState: .Normal)
+        cameraBtn.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        cameraBtn.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickcCmeraBtn(_:)), forControlEvents: .TouchUpInside)
+        
+        
+        let linView = UIView()
+        linView.backgroundColor = UIColor.lightGrayColor()
+        linView.alpha = 0.5
+        
+        //从手机相册选择
+        let PhotoBtn = UIButton()
+        PhotoBtn.backgroundColor = UIColor.whiteColor()
+        PhotoBtn.setTitle("从手机相册选择", forState: .Normal)
+        
+        PhotoBtn.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        PhotoBtn.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.clickPhotoBtn(_:)), forControlEvents: .TouchUpInside)
+        
+        //点击取消
+        let photoCancelBtn = UIButton()
+        photoCancelBtn.backgroundColor = UIColor.whiteColor()
+        photoCancelBtn.setTitle("取消", forState: .Normal)
+        photoCancelBtn.setTitleColor(UIColor.blackColor(), forState: .Normal)
+        photoCancelBtn.addTarget(self, action: #selector(MTUserInfoViewControllerNEW.photoCancelBtn(_:)), forControlEvents: .TouchUpInside)
+        
+        
+        iconView.addSubview(cameraBtn)
+        iconView.addSubview(linView)
+        iconView.addSubview(PhotoBtn)
+        iconView.addSubview(photoCancelBtn)
+        
+        
+        cameraBtn.snp_makeConstraints { (make) in
+            make.left.equalTo(iconView.snp_left)
+            make.right.equalTo(iconView.snp_right)
+            make.top.equalTo(iconView.snp_top)
+            make.height.equalTo(50)
+        }
+        linView.snp_makeConstraints { (make) in
+            make.left.equalTo(iconView.snp_left)
+            make.right.equalTo(iconView.snp_right)
+            make.top.equalTo(cameraBtn.snp_bottom).offset(-0.5)
+            
+            make.height.equalTo(0.5)
+        }
+        PhotoBtn.snp_makeConstraints { (make) in
+            make.left.equalTo(iconView.snp_left)
+            make.right.equalTo(iconView.snp_right)
+            make.top.equalTo(cameraBtn.snp_bottom)
+            make.height.equalTo(50)
+        }
+        
+        photoCancelBtn.snp_makeConstraints { (make) in
+            make.top.equalTo(PhotoBtn.snp_bottom).offset(5)
+            make.left.equalTo(iconView.snp_left)
+            make.right.equalTo(iconView.snp_right)
+            make.height.equalTo(50)
+        }
+        
+    }
+    
+    func clickcCmeraBtn(sender:UIButton) {
+        print("点击了拍照")
+        
+        guard UIImagePickerController.isSourceTypeAvailable(.Camera) else {
+            print("模拟无法打开照相机,请在真机中使用")
+            return
+        }
+        
+        //        let picker = UIImagePickerController()
+        picker.sourceType = .Camera
+        picker.delegate = self
+        picker.allowsEditing = true
+        self.presentViewController(picker, animated: true, completion: nil)
+        
+        
+        hideAnimation(iconView,time: 0.2)
+//        tableView.reloadData()
+    }
+    
+    
+    func clickPhotoBtn(sender:UIButton) {
+        print("点击了从手机相册选择")
+        
+        //        let picker = UIImagePickerController()
+        picker.sourceType = .PhotoLibrary
+        picker.delegate = self
+        picker.allowsEditing = true
+        self.presentViewController(picker, animated: true, completion: nil)
+        
+        
+        hideAnimation(iconView,time: 0.2)
+//        tableView.reloadData()
+    }
+    
+    
+    func photoCancelBtn(sender:UIButton) {
+        print("点击了拍照取消")
+        
+        
+        
+        
+        hideAnimation(iconView,time: 0.2)
+        tableView.reloadData()
+    }
+    
+    
+    
+}
+
+//MARK: - 调用系统弹框头像上传
+//MARk: -
+extension MTUserInfoViewControllerNEW: UIImagePickerControllerDelegate,UINavigationControllerDelegate {
+    
+    private func setImage(){
+        
+        let actionSheet = UIAlertController(title: "上传头像", message: nil, preferredStyle: .ActionSheet)
+        
+        
+        let takePhotos = UIAlertAction(title: "拍照", style: .Destructive, handler: {
+            (action: UIAlertAction) -> Void in
+            
+            guard UIImagePickerController.isSourceTypeAvailable(.Camera) else {
+                print("模拟无法打开照相机,请在真机中使用")
+                return
+            }
+            
+            let picker = UIImagePickerController()
+            picker.sourceType = .Camera
+            picker.delegate = self
+            picker.allowsEditing = true
+            self.presentViewController(picker, animated: true, completion: nil)
+            
+        })
+        let cancelBtn = UIAlertAction(title: "取消", style: .Cancel, handler: nil)
+        
+        let selectPhotos = UIAlertAction(title: "相册", style: .Default, handler: {(action:UIAlertAction) -> Void in
+            let picker = UIImagePickerController()
+            picker.sourceType = .PhotoLibrary
+            picker.delegate = self
+            picker.allowsEditing = true
+            self.presentViewController(picker, animated: true, completion: nil)
+            
+        })
+        
+        
+        actionSheet.addAction(cancelBtn)
+        actionSheet.addAction(takePhotos)
+        actionSheet.addAction(selectPhotos)
+        
+        self.presentViewController(actionSheet, animated: true, completion: nil)
+    }
+    
+    //MARK: 选取图像代理方法
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
+        
+        let type: String = (info[UIImagePickerControllerMediaType] as! String)
+        
+        /** 当选择的类型是图片*/
+        guard type == "public.image" else {
+            print("图片信息错误")
+            return
+        }
+        
+        /** 从info拿到原始图片并修正图片的位置 */
+        let image = self.fixOrientation((info[UIImagePickerControllerOriginalImage] as! UIImage))
+        dispatch_async(dispatch_get_main_queue(), {})
+
+        var imgs = [UIImage]()
+        imgs.append(image)
+        
+        uploadUserAvatar(image)
+//        MTRequest.sharedManager.upload(RequestApi.kUlr_HeadImg,params:nil,imgs: imgs){
+//            (stauts) in
+//            if stauts == 0 {
+//                SVProgressHUD.showErrorWithStatus("图片上传失败")
+//            }
+//            
+//        }
+        self.iconImageView?.UserInfoIcon.image = image
+        //关闭系统相册页面
+        picker.dismissViewControllerAnimated(true, completion: nil)
+        tableView.reloadData()
+        
+    }
+    
+    /**
+     上传用户头像
+     
+     - parameter image: 头像图片
+     */
+    func uploadUserAvatar(image: UIImage) {
+        
+        ZJAccountModel.uploadUserAvatar(image) { (success) in
+            if success {
+                ZJAccountModel.getSelfUserInfo({ (success) in
+                    if success {
+//                        self.updateHeaderData()
+                        self.delegate?.userInfoImage!(image)
+                    }
+                })
+            }
+        }
+    }
+
+    
+    //MARK: 调整选取图片位置计算
+    func fixOrientation(aImage: UIImage) -> UIImage {
+        
+        if aImage.imageOrientation == .Up {
+            return aImage
+        }
+        /** 需要计算适当的变换，使图像直立。*/
+        /** 旋转，如果是左/右/下，然后翻转。*/
+        var transform: CGAffineTransform = CGAffineTransformIdentity
+        switch aImage.imageOrientation {
+            
+        case .Down, .DownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, aImage.size.height)
+            transform = CGAffineTransformRotate(transform, CGFloat(M_PI))
+        case .Left, .LeftMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, 0)
+            transform = CGAffineTransformRotate(transform, CGFloat(M_PI_2))
+        case .Right, .RightMirrored:
+            transform = CGAffineTransformTranslate(transform, 0, aImage.size.height)
+            transform = CGAffineTransformRotate(transform, CGFloat(-M_PI_2))
+        default:
+            
+            break
+        }
+        
+        switch aImage.imageOrientation {
+            
+        case .UpMirrored, .DownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, 0)
+            transform = CGAffineTransformScale(transform, -1, 1)
+        case .LeftMirrored, .RightMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.height, 0)
+            transform = CGAffineTransformScale(transform, -1, 1)
+        default:
+            break
+        }
+        
+        let ctx: CGContextRef = CGBitmapContextCreate(nil,
+                                                      Int(aImage.size.width),
+                                                      Int(aImage.size.height),
+                                                      CGImageGetBitsPerComponent(aImage.CGImage),
+                                                      0,
+                                                      CGImageGetColorSpace(aImage.CGImage),
+                                                      CGImageGetBitmapInfo(aImage.CGImage).rawValue)!
+        CGContextConcatCTM(ctx, transform)
+        
+        switch aImage.imageOrientation {
+        case .Left, .LeftMirrored, .Right, .RightMirrored:
+            
+            CGContextDrawImage(ctx, CGRectMake(0, 0, aImage.size.height, aImage.size.width), aImage.CGImage)
+            
+        default:
+            CGContextDrawImage(ctx, CGRectMake(0, 0, aImage.size.width, aImage.size.height), aImage.CGImage)
+        }
+        
+        
+        /** 只需要创建一个新的UIImage绘画的图像上下文*/
+        let cgimg: CGImageRef = CGBitmapContextCreateImage(ctx)!
+        let img: UIImage = UIImage(CGImage: cgimg)
+        return img
+    }
+    
+    
+}

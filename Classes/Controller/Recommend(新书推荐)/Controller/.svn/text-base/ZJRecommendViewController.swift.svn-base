@@ -1,0 +1,298 @@
+//
+//  ZJRecommendViewController.swift
+//  Scholar
+//
+//  Created by mac on 16/9/5.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+import Alamofire
+
+class ZJRecommendViewController: ZJMainVc, UITableViewDelegate, UITableViewDataSource {
+    
+    var model: [DDHeaderSetting]?
+    var models: [ZJRecommend]?
+    var detailsFaceModel: [DDDetailsFace]?
+    
+    var index:  NSIndexPath?
+    
+    //HomeHeader
+    private  var collectionView : UICollectionView!
+    private var flowLayout : LeftRightItem = LeftRightItem()
+    let headImage = UIImageView()
+
+    
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        setupUI()
+        tableView.mj_header = setupHeaderRefresh(self, action: #selector(pullDownRefesh))
+        tableView.mj_footer = setupFooterRefresh(self, action: #selector(pullupMoreData))
+        tableView.mj_header.beginRefreshing()
+    }
+    
+    deinit {
+        
+        print("\(self.debugDescription) --- 销毁")
+    }
+    
+    /** 下拉刷新 */
+    @objc private func pullDownRefesh() {
+        
+        loadData(0)
+    }
+    
+    /** 上拉刷新 */
+    @objc private func pullupMoreData() {
+        
+        loadData(1)
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    private lazy var tableView: UITableView = {
+        let table = UITableView()
+        
+        table.registerClass(ZJRecommendTableViewCell.self, forCellReuseIdentifier: "recommend_cell")
+        
+        table.dataSource = self
+        table.delegate = self
+        
+        return table
+    }()
+    
+    private func setupUI() {
+        
+//        navigationController?.navigationBar.setBackgroundImage(UIImage(named: ""), forBarMetrics: .Default)
+        
+        let button = UIButton()
+        button.setImage(UIImage(named: "Me_ProfileBackground"), forState: .Normal)
+        button.backgroundColor = UIColor.blueColor()
+        button.addTarget(self, action: #selector(didClickHeaderButton(_:)), forControlEvents: .TouchUpInside)
+        
+        let headerView = ZJHeaderView(frame: CGRectMake(0, -20, self.view.frame.size.width, SCREEN_SCALE_HEIGHT * 600))
+        headerView.headerButton.addTarget(self, action: #selector(didClickHeaderView(_:)), forControlEvents: .TouchUpInside)
+        headerView.moreButton.addTarget(self, action: #selector(didClickMoreButton(_:)), forControlEvents: .TouchUpInside)
+        headerView.searchButton.addTarget(self, action: #selector(didClickSearchButton(_:)), forControlEvents: .TouchUpInside)
+        self.tableView.tableHeaderView = headerView
+        
+        //HeaderSetting
+        collectionView = UICollectionView(frame: CGRectMake(0, SCREEN_SCALE_HEIGHT*130, SCREEN_W, SCREEN_SCALE_HEIGHT * 400), collectionViewLayout: flowLayout)
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        
+        collectionView.registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.backgroundColor = UIColor.clearColor()
+        collectionView.showsHorizontalScrollIndicator = false
+
+        headerView.addSubview(collectionView)
+        
+        tableView.frame = view.bounds
+        view.addSubview(tableView)
+        
+        //创建标题label
+        let titleLabel = UILabel(frame: CGRectMake(125, collectionView.y + collectionView.height-10, SCREEN_W - 250, 44))
+        titleLabel.text = "《我在政协这一年》"
+        titleLabel.textAlignment = NSTextAlignment.Center
+        titleLabel.textColor = UIColor.whiteColor()
+        titleLabel.adjustsFontSizeToFitWidth = true
+        headerView.addSubview(titleLabel)
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        /** 隐藏导航栏 */
+        self.navigationController?.navigationBarHidden=true
+    }
+    
+     /** 点击headerView */
+    @objc private func didClickHeaderView(button: UIButton) {
+    
+        print("HeaderView -> ")
+    }
+    
+    /** 点击更多按钮 */
+    @objc private func didClickMoreButton(button: UIButton) {
+    
+        print("moreButton -> ")
+//        let moreVc = ZJMoreViewController()
+//        let moreVc = ZJLoginViewController()
+        let moreVc = DDMessageViewController()
+//        self.navigationController?.pushViewController(moreVc, animated: true)
+        self.navigationController?.presentViewController(moreVc, animated: true, completion: nil)
+    }
+    
+    /** 点击搜索按钮 */
+    @objc private func didClickSearchButton(button: UIButton) {
+    
+        print("searchButton -> ")
+        
+        let vc = ZJSearchViewController()
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    @objc private func didClickHeaderButton(button: UIButton) {
+        
+        print("searchButton -> ")
+    }
+    
+}
+
+extension ZJRecommendViewController : UICollectionViewDataSource,UICollectionViewDelegate {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return model?.count ?? 0
+    }
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("cell", forIndexPath: indexPath)
+        
+        let headerModel = model![indexPath.row]
+        let headImage = UIImageView(frame: cell.bounds)
+        cell.contentView.addSubview(headImage)
+        
+        headImage.yy_setImageWithURL(NSURL(string: "\(BASE_URL)" + headerModel.book_pic), placeholder: UIImage(named: "委员笔记_11"))
+
+        return cell
+    }
+    
+    
+        
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        
+        let modelHeader = model![indexPath.row]
+
+        let vc = CHCoverViewController()
+        vc.imageName = modelHeader.book_pic
+        vc.titles = modelHeader.book_name
+        vc.author = modelHeader.book_author
+        vc.readingCount = "30"
+        vc.fileSize = "20K"
+        vc.descriptions = modelHeader.book_description
+        vc.money = modelHeader.book_new_price
+        vc.readingURL = modelHeader.book_epub_free
+        self.navigationController?.pushViewController(vc, animated: true)
+        collectionView.deselectItemAtIndexPath(indexPath, animated: false)
+        
+        self.index = indexPath
+    }
+}
+
+extension ZJRecommendViewController {
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return models?.count ?? 0
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        var cell = tableView.dequeueReusableCellWithIdentifier("recommend_cell") as? ZJRecommendTableViewCell
+        
+        if cell == nil{
+            cell = ZJRecommendTableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: "recommend_cell") as ZJRecommendTableViewCell
+        }
+        
+        if models?.count > indexPath.row {
+            let model: ZJRecommend? = models![indexPath.row]
+            cell?.model = model
+        }
+        
+        cell?.backgroundColor = UIColor.clearColor()
+        
+        return cell!
+    }
+    
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        
+        return SCREEN_SCALE_HEIGHT * 300
+        
+    }
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        let modelFace = models![indexPath.row]
+
+//        let coverView = ZJCoverView(frame: CGRectMake(0, 0, SCREEN_W, SCREEN_H), imageName: modelFace.book_pic, title: modelFace.book_name, author: modelFace.book_author, readingCount: "30", fileSize: "20k", description: modelFace.book_description, money: modelFace.book_new_price)
+//        coverView.shoppingCar.addTarget(self, action: #selector(didClickFirstReadingButton(_:)), forControlEvents: .TouchUpInside)
+//        
+//        let window = UIApplication.sharedApplication().keyWindow
+//        window?.addSubview(coverView)
+        
+//        let userid = String(NSUserDefaults.standardUserDefaults().objectForKey("userID")!)
+//        let parameters:[String : AnyObject] = ["user_id": userid, "book_id": modelFace.book_id]
+//        print("userid: \(userid)")
+//        print("book_id: \(modelFace.book_id)")
+//        CHProgressHUD.showWithStatus("正在发送")
+//        CHNetworkTools.sharedNetworkTool.post("http://192.168.31.48/index.php/myStackroom/AddmyNotes", parameters: parameters) { (success, result, error) in
+//            print("试读：发送成功")
+//            CHProgressHUD.dismiss()
+//        }
+        
+        let vc = CHCoverViewController()
+        vc.imageName = modelFace.book_pic
+        vc.titles = modelFace.book_name
+        vc.author = modelFace.book_author
+        vc.readingCount = "30"
+        vc.fileSize = "20K"
+        vc.descriptions = modelFace.book_description
+        vc.money = modelFace.book_new_price
+        vc.readingURL = modelFace.book_epub_free
+//        vc.view.backgroundColor = UIColor.blackColor()
+        self.navigationController?.pushViewController(vc, animated: true)
+        
+        tableView.deselectRowAtIndexPath(indexPath, animated: false)
+        self.index = indexPath
+    }
+    
+}
+
+
+extension ZJRecommendViewController {
+    private func loadData(mothod: Int) {
+        
+        DDHeaderSetting.loadHomeData { (result) in
+//            print(result)
+            print(NSThread.isMainThread())
+            
+            guard let result = result else {
+                return
+            }
+            
+            self.model = result
+            self.collectionView.reloadData()
+        }
+        
+        ZJRecommend.loadHomeData { (result) in
+            
+//            print(result)
+            print(NSThread.isMainThread())
+            
+            self.tableView.mj_header.endRefreshing()
+            self.tableView.mj_footer.endRefreshing()
+            guard let result = result else {
+                self.tableView.mj_footer.endRefreshingWithNoMoreData()
+                return
+            }
+            
+            if mothod == 0 {
+                
+                self.models = result
+            }else {
+                
+                self.models = result + result
+            }
+
+            self.tableView.reloadData()
+        }
+        
+    }
+}

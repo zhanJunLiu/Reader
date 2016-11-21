@@ -1,0 +1,330 @@
+//
+//  ZJSettingViewController.swift
+//  Book
+//
+//  Created by mac on 16/9/12.
+//  Copyright © 2016年 mac. All rights reserved.
+//
+
+import UIKit
+
+/** 设置ID */
+private let ID = "table_cell"
+
+class ZJSettingViewController: ZJMainVc, UITableViewDelegate, UITableViewDataSource {
+    
+    
+    var models: [ZJSettingModel]?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        /** 加载数据 */
+        loadData { (result) in
+            self.models = result
+            self.tableView.reloadData() /** 更新 UI */
+        }
+        // Do any additional setup after loading the view.
+        setupUI()
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    /** 设置tableView */
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.registerClass(ZJTableViewCell.self, forCellReuseIdentifier: ID)
+        tableView.delegate = self
+        tableView.dataSource = self
+        return tableView
+    }()
+    
+    /** 设置UI */
+    private func setupUI() {
+        tableView.frame = self.view.bounds
+        tableView.separatorStyle = .None
+        view.addSubview(tableView)
+    }
+
+    /*
+    // MARK: - Navigation
+
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        // Get the new view controller using segue.destinationViewController.
+        // Pass the selected object to the new view controller.
+    }
+    */
+
+}
+
+extension ZJSettingViewController: UIAlertViewDelegate {
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return models?.count ?? 0
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let cell: ZJTableViewCell = tableView.dequeueReusableCellWithIdentifier(ID, forIndexPath: indexPath) as! ZJTableViewCell
+        if indexPath.row == 0 {
+            cell.switchs.hidden = false
+        }
+        let model = models![indexPath.row]
+        
+        cell.models = model
+        
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return SCREEN_SCALE_HEIGHT * 100
+    }
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        tableView.deselectRowAtIndexPath(indexPath, animated: false)
+        
+        let cell = tableView.cellForRowAtIndexPath(indexPath) as? ZJTableViewCell
+        
+        if indexPath.row == 0 || cell?.switchs.on == true { /** 每日推送 */
+            
+            
+        }else if indexPath.row == 1 { /** 网站连接 */
+            
+            let connectNetVc = ZJConnectNetViewController()
+            self.navigationController?.pushViewController(connectNetVc, animated: true)
+            
+        }else if indexPath.row == 2 { /** 清除缓存 */
+            self.caculateFolderSize(atPath: self.getPath())
+            
+        }else if indexPath.row == 3 { /** 软件反馈 */
+            
+            let feedbackVc = ZJFeedBackViewController()
+            self.navigationController?.pushViewController(feedbackVc, animated: true)
+            
+        }else if indexPath.row == 4 {
+            
+            let abutsUsVc = CHAbutsUsViewController()
+            self.navigationController?.pushViewController(abutsUsVc, animated: true)
+            
+        }else { /** 退出登录 */
+//            alertOutLogin()
+            ZJAccountModel.logout()
+            CHProgressHUD.showInfoWithStatus("已退出当前账号")
+        }
+    }
+    
+    
+    
+    /**
+     清除缓存
+     1.找到缓存路径，计算缓存文件的大小
+     2.删除缓存文件夹中的文件
+     */
+    
+    //MARK: - 清除缓存
+    //首先找到缓存文件的路径
+    func getPath() -> String {
+        //在沙盒目录下分为Document、Libray、Temp三个文件夹，缓存文件夹位于Library文件夹下的Cache
+//        let path = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.CachesDirectory, NSSearchPathDomainMask.UserDomainMask, true).last!
+        // 取出cache文件夹目录 缓存文件都在这个目录下
+        let path = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.CachesDirectory, NSSearchPathDomainMask.UserDomainMask, true).first!
+        return path
+    }
+    
+    //计算缓存文件夹的大小
+    func caculateFolderSize(atPath path: String) -> Int {
+//        //获取文件管理类
+//        let fileManager = NSFileManager.defaultManager()
+//        var folderSize: CGFloat = 0.0
+//        //判断指定路径下文件管理下是否有文件
+//        if fileManager.fileExistsAtPath(path) {
+//            //找到缓存文件夹下的子文件
+//            let fileArray = fileManager.subpathsAtPath(path)!
+//            do {
+//                for fileName: String in fileArray {
+//                    //需要获取每个子文件的路径
+//                    let filePath = NSURL(fileURLWithPath: path).URLByAppendingPathComponent(fileName).absoluteString
+//                    //计算每个子文件的大小
+//                    let fileSize: CGFloat = try CGFloat(fileManager.attributesOfItemAtPath(filePath).count)
+//
+//                    
+////                    var fileSize: CGFloat = try fileManager.attributesOfItem(at: filePath)!.fileSize()
+//                    //计算值是以字节为单位的
+//                    folderSize += fileSize / 1024.0 / 1024.0
+//                }
+//            }
+//            catch _ {
+//            }
+//            //清除
+//            self.deleteFolderSizse(folderSize)
+//            return folderSize
+//        }
+//        else {
+//            return 0.0
+//        }
+        
+        
+        // 取出文件夹下所有文件数组
+        let fileArr = NSFileManager.defaultManager().subpathsAtPath(path)
+        
+        //快速枚举出所有文件名 计算文件大小
+        var size = 0
+        for file in fileArr! {
+            
+            // 把文件名拼接到路径中
+            let apath = path.stringByAppendingString("/\(file)")
+            // 取出文件属性
+            let floder = try! NSFileManager.defaultManager().attributesOfItemAtPath(apath)
+            // 用元组取出文件大小属性
+            for (abc, bcd) in floder {
+                // 累加文件大小
+                if abc == NSFileSize {
+                    size += bcd.integerValue
+                }
+            }
+        }
+        
+        let mm = size / 1024 / 1024
+        //清除
+        self.deleteFolderSizse(mm)
+        return mm
+    }
+    
+    //给用户弹出提示，让用户自由选择是否清除
+    func deleteFolderSizse(folderSize: Int) {
+        
+        if  folderSize > 0 {
+            let alert = UIAlertController(title: "提示", message: "\("当前有")"+String(folderSize)+"\("M,是否清除")", preferredStyle: UIAlertControllerStyle.Alert)
+            //确定按钮
+            let action1 = UIAlertAction(title: "确定", style: UIAlertActionStyle.Default, handler: { (action1) in
+                self.clearCache(self.getPath())
+            })
+            //取消按钮
+            let action2 = UIAlertAction(title: "取消", style: UIAlertActionStyle.Cancel, handler: { (action2) in
+                
+            })
+            
+            alert.addAction(action1)
+            alert.addAction(action2)
+            self.presentViewController(alert, animated: true, completion: { 
+                
+            })
+        }else {
+            let alert = UIAlertController(title: "提示", message: "当前没有缓存", preferredStyle: UIAlertControllerStyle.Alert)
+            //确定按钮
+            let action3 = UIAlertAction(title: "确定", style: UIAlertActionStyle.Default, handler: { (action3) in
+                
+            })
+            alert.addAction(action3)
+            self.presentViewController(alert, animated: true, completion: { 
+                
+            })
+            
+            
+        }
+    }
+   
+    //MARK: - 清理缓存按钮响应方法
+    func clearCache(path: String) {
+        
+//        let fileManager = NSFileManager.defaultManager()
+//        if fileManager.fileExistsAtPath(path) {
+//            //获取子文件
+//            let fileArray = fileManager.subpathsAtPath(path)!
+//            for fileName: String in fileArray {
+//                //过滤掉不清除的文件
+//                if fileName.hasSuffix(".mp3") {
+//                    print("不清除")
+//                    return
+//                }
+//                else {
+//                    //全部清除
+//                    //获取子文件的路径
+//                    let filePath = NSURL(fileURLWithPath: path).URLByAppendingPathComponent(fileName).absoluteString
+//                    do {
+//                        try fileManager.removeItemAtPath(filePath)
+//                    }
+//                    catch _ {
+//                    }
+//                }
+//            }
+//        }
+        
+        
+        // 取出文件夹下所有文件数组
+        let fileArr = NSFileManager.defaultManager().subpathsAtPath(path)
+        
+        // 遍历删除
+        for file in fileArr! {
+            
+            let bpath = path.stringByAppendingString("/\(file)")
+            if NSFileManager.defaultManager().fileExistsAtPath(bpath) {
+                
+                do {
+                    try NSFileManager.defaultManager().removeItemAtPath(bpath)
+                } catch {
+                    
+                }
+            }
+        }
+        
+    }
+    
+    //彻底清除缓存
+    func alertView(alertView: UIAlertView, clickedButtonAtIndex buttonIndex: Int) {
+        if buttonIndex == 1 {
+            self.caculateFolderSize(atPath: self.getPath())
+        }
+    }
+
+    
+    
+    /** 退出登录提示 */
+    private func alertOutLogin() {
+        let alertVC = UIAlertController(title: "退出登录", message: nil, preferredStyle: .Alert)
+        let actionCancel = UIAlertAction(title: "取消", style: .Cancel, handler: nil)
+        let actionDone = UIAlertAction(title: "确定", style: .Default) { (action) in
+            print("退出程序 -> ")
+            exit(0)
+            
+        }
+        alertVC.view.tintColor = ZJGlobalBlackBlueColor()
+        alertVC.addAction(actionDone)
+        alertVC.addAction(actionCancel)
+        presentViewController(alertVC, animated: true, completion: nil)
+    }
+}
+
+extension ZJSettingViewController {
+    private func loadData(finished: ((result: [ZJSettingModel]) -> ())) {
+        // 异步获取数据
+        dispatch_async(dispatch_get_global_queue(0, 0)) {
+            /** 定义数据 */
+            let dict = [["title": "每日推送", "img": "tuisong"],
+                        ["title": "网站链接", "img": "lianjie"],
+                        ["title": "清除缓存", "img": "qingchu"],
+                        ["title": "软件反馈", "img": "fankui"],
+                        ["title": "关于我们", "img": "关于我们"],
+                        ["title": "退出登录", "img": "tishi"]]
+            var model : [ZJSettingModel] = [ZJSettingModel]() /** 定义一个模型数组 */
+            for str in dict { /** 遍历字典数组数据 */
+                
+                let md = ZJSettingModel()
+                md.title = str["title"]
+                md.img = str["img"]
+                model.append(md)
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), {  /** 回到主线程更新 UI */
+                
+                finished(result: model) /** 执行闭包完成回调 */
+            })
+        }
+    }
+}
+
